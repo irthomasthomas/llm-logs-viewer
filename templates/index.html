@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Search Viewer</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        h1 { margin: 10px; }
+        .record-list-container {
+            height: 30vh; /* 30% of viewport height */
+            min-height: 150px; /* Minimum height */
+            overflow-y: auto;
+            border-bottom: 1px solid #ddd;
+        }
+        .record-list { list-style: none; padding: 0; margin: 0; }
+        .record-list-item { border-bottom: 1px solid #ddd; padding: 10px; cursor: pointer; }
+        .record-list-item:hover { background-color: #f9f9f9; }
+        .record-details {
+            flex-grow: 1; /* Take up remaining space */
+            padding: 10px;
+            overflow-y: auto; /* Add scroll if content overflows */
+            min-height: 150px;
+        }
+        .hidden { display: none; }
+        /* Basic styling for Markdown */
+        .markdown-content h1 { font-size: 1.5em; }
+        .markdown-content h2 { font-size: 1.3em; }
+        .markdown-content h3 { font-size: 1.1em; }
+        .markdown-content p { margin-bottom: 1em; }
+        .markdown-content pre { background-color: #f0f0f0; padding: 10px; overflow-x: auto; }
+        .markdown-content code { font-family: monospace; background-color: #f0f0f0; }
+        .markdown-content blockquote { border-left: 3px solid #ccc; padding-left: 10px; margin-left: 0; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <h1>LLM Conversation Records</h1>
+
+    <div class="record-list-container">
+        <ul class="record-list">
+        {% for record in records %}
+            <li class="record-list-item" data-record-id="{{ record.id }}">
+                Conversation ID: {{ record.conversation_id }},
+                Datetime: {{ record.datetime_utc }},
+                Model: {{ record.model }},
+                Category: {{ record.category }},
+                <button onclick="showContent('prompt', '{{ record.id }}')">Show Prompt</button>
+                <button onclick="showContent('response', '{{ record.id }}')">Show Response</button>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <div class="record-details">
+        <h2>Record Details</h2>
+        <div id="record-content" class="markdown-content">
+            <!-- Content will be loaded here -->
+        </div>
+    </div>
+
+<script>
+function showContent(type, recordId) {
+  fetch(`/record/${recordId}`)
+    .then(response => response.json())
+    .then(data => {
+      const contentDiv = document.getElementById('record-content');
+      if (type === 'prompt') {
+          contentDiv.innerHTML = marked.parse(data.prompt);
+      } else if (type === 'response') {
+          contentDiv.innerHTML = marked.parse(data.response);
+      }
+    });
+}
+</script>
+</body>
+</html>
